@@ -114,7 +114,6 @@ public class FourteSolver {
 		List<Character> parsedChar = new ArrayList<>();
 		
 		String currNum = "";
-//		System.out.println(combination);
 		
 		for (char ch:combination.toCharArray()) {
 			
@@ -174,70 +173,5 @@ public class FourteSolver {
 		
 	}
 
-//	public boolean isValid(String combination, int target) {
-//		
-//		List<Integer> parsedNums = new ArrayList<>();
-//		List<Character> parsedChar = new ArrayList<>();
-//		
-//		String currNum = "";
-////		System.out.println(combination);
-//		
-//		for (char ch:combination.toCharArray()) {
-//			
-//			if (Character.isDigit(ch)) {
-//				currNum += ch;
-//			} else {
-//				parsedChar.add(ch);
-//				parsedNums.add(Integer.valueOf(currNum));
-//				currNum = "";
-//			}			
-//			
-//		}
-//		
-//		if (currNum.length() != 0) {
-//			parsedNums.add(Integer.valueOf(currNum));
-//		}
-//		
-//		int index = 0;
-//		
-//		for (char ch:parsedChar) {
-//			int num1 = parsedNums.get(index);
-//			int num2 = parsedNums.get(index+1);
-//			
-//			switch (ch) {
-//			
-//			case ('+'):
-//				parsedNums.set(index+1, num1+num2);
-//			break;
-//			
-//			case ('-'):
-//				parsedNums.set(index+1, num1-num2);
-//			break;
-//			
-//			case ('*'):
-//				parsedNums.set(index+1, num1*num2);
-//			break;
-//			
-//			case ('/'):
-//				if (num1%num2 == 0) {
-//					parsedNums.set(index+1, num1/num2);					
-//				} else {
-//					return false;
-//				}
-//			break;
-//			
-//			}
-//			
-//			index++;
-//		}
-//		
-//		if (parsedNums.get(index) == target) {
-//			System.out.println(combination);
-//			return true;
-//		}
-//		
-//		return false;
-//		
-//	}
-//	
+
 }
