@@ -47,18 +47,11 @@ public class DataBaseController {
 
 	public void printDeptCourse(int department) throws SQLException {
 		
-		String query = "SELECT id, courseName, semester, startTime, endTime FROM course WHERE (department = "+ department +")";
+		String query = "SELECT id, courseName, semester, credits FROM course WHERE (department = "+ department +")";
 		ResultSet result = statement.executeQuery(query);
 		
 		while (result.next()) {
-			for (int i=0; i<5; i++) {
-				System.out.print(result.getString(i+1));
-				System.out.print("\t");
-				if (i==0 || i==2) {
-					System.out.print("\t");					
-				}
-			}
-			System.out.println();
+			System.out.printf("%-10s %-25s %-12s %-10s", result.getString(1), result.getString(2), result.getString(3), result.getString(4)).println();
 		}
 		
 	}

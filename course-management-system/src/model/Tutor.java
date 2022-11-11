@@ -8,10 +8,11 @@ public class Tutor {
 	private int id;
 	private String email;
 	private int department;
+	private String deptName;
 	private List<Course> courseList;
 	
-	public Tutor(String name) {
-		this.name = name;
+	public Tutor() {
+		
 	}
 	
 	public String getName() {
@@ -46,6 +47,14 @@ public class Tutor {
 	}
 	public void addCourseList(Course course) {
 		this.courseList.add(course);
+	}
+
+	public String getDeptName() {
+		return deptName;
+	}
+
+	public void setDeptName(String deptName) {
+		this.deptName = deptName;
 	}
 	
 	

@@ -2,9 +2,12 @@ package controller;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import model.Course;
 import model.Student;
@@ -13,10 +16,11 @@ import model.Tutor;
 public class AdminController {
 	
 	private Statement statement;
+	private Connection connection;
 	
 	public AdminController() throws SQLException {
 		
-		Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/courseManagementDB", "root", "password");
+		connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/courseManagementDB", "root", "password");
 		statement = connection.createStatement();
 		
 	}
@@ -28,46 +32,68 @@ public class AdminController {
 		return false;
 	}
 	
-	public void addCourse(Course course) throws SQLException {
+	public int addCourse(Course course) throws SQLException {
 		
-		String query = String.format("INSERT INTO course (courseName, department, semester, startTime, endTime) VALUES (\"%s\", %d, %d, \"%s\", \"%s\")"
-				, course.getCourseName(), course.getDepartment(), course.getSemester(), course.getStartTime().toString(), course.getEndTime().toString());
+		String query = String.format("INSERT INTO course (courseName, department, semester, credits) VALUES (\"%s\", %d, %d, %d)"
+				, course.getCourseName(), course.getDepartment(), course.getSemester(), course.getCredits());
 		
-		statement.executeUpdate(query);
+		PreparedStatement stmt = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+		
+		stmt.execute();
+		
+		ResultSet courseId = stmt.getGeneratedKeys();
+		
+		if (courseId.next()) {
+			return courseId.getInt(1);
+		}
+		
+		return -1;
 		
 	}
 
-	public void printCourseList() throws SQLException {
+	public void printCourseList(AdminControllerListener<Course> listner) throws SQLException {
 		
-		String query = "SELECT courseName, deptName, semester, startTime, endTime FROM course INNER JOIN department ON course.department = department.id;";
+		String query = "SELECT course.id, courseName, deptName, semester, credits FROM course INNER JOIN department ON course.department = department.id;";
 		ResultSet result = statement.executeQuery(query);
 		
-		while (result.next()) {			
-			for (int i=0; i<5; i++) {
-				System.out.print(result.getString(i+1));
-				System.out.print("\t");
-				if (i==1 || i==2) {
-					System.out.print("\t");
-				}
-			}
-			System.out.println();			
+//		System.out.println("--> got result");
+		
+		List<Course> courseList = new ArrayList<>();
+		
+		while (result.next()) {	
+			Course course = new Course();
+			
+			course.setCourseId(result.getInt(1));
+			course.setCourseName(result.getString(2));
+			course.setDeptName(result.getString(3));
+			course.setSemester(result.getInt(4));
+			course.setCredits(result.getInt(5));
+			
+			courseList.add(course);
+								
 		}
+		
+		listner.print(courseList);
+		
 	}
 	
-	public void printStudentList() throws SQLException {
+	public void printStudentList(AdminControllerListener<Student> listner) throws SQLException {
 		String query = "SELECT name, deptName, semester, credits FROM student INNER JOIN department ON student.department = department.id;";
 		ResultSet result = statement.executeQuery(query);
 		
-		while (result.next()) {			
-			for (int i=0; i<4; i++) {
-				System.out.print(result.getString(i+1));
-				System.out.print("\t");
-				if (i==0 || i==1 || i==2) {
-					System.out.print("\t");
-				}
-			}
-			System.out.println();			
+		List<Student> studentList = new ArrayList<>();
+		
+		while (result.next()) {
+			Student student = new Student();
+			student.setName(result.getString(1));
+			student.setDeptName(result.getString(2));
+			student.setSemester(result.getInt(3));
+			student.setCredits(result.getInt(4));
+			studentList.add(student);
 		}
+		
+		listner.print(studentList);
+		
 	}
 
 	public void addStudent(Student student) throws SQLException {
@@ -85,21 +111,32 @@ public class AdminController {
 		
 	}
 
-	public void printTutorList() throws SQLException {
+	public void printTutorList(AdminControllerListener<Tutor> listener) throws SQLException {
 		
 		String query = "SELECT tutor.id, name, deptName, email FROM tutor INNER JOIN department ON tutor.department = department.id;";
 		ResultSet result = statement.executeQuery(query);
 		
-		while (result.next()) {			
-			for (int i=0; i<4; i++) {
-				System.out.print(result.getString(i+1));
-				System.out.print("\t");
-				if (i==0 || i==1) {
-					System.out.print("\t");
-				}
-			}
-			System.out.println();			
+		List<Tutor> tutorList = new ArrayList<>();
+		
+		while (result.next()) {
+			Tutor tutor = new Tutor();
+			tutor.setId(result.getInt(1));
+			tutor.setName(result.getString(2));
+			tutor.setDeptName(result.getString(3));
+			tutor.setEmail(result.getString(4));
+			tutorList.add(tutor);
 		}
+		
+		listener.print(tutorList);
+		
+	}
+
+	public void addSchedule(int courseId, int[] slots) throws SQLException {
+		
+		String querry = String.format("INSERT INTO schedule (course, monday, tuesday, wednesday, thursday, friday) VALUES (%d, %d, %d, %d, %d, %d)"
+								, courseId, slots[0], slots[1], slots[2], slots[3], slots[4]);
+		
+		statement.executeUpdate(querry);
 		
 	}
 

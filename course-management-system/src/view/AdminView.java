@@ -1,11 +1,14 @@
 package view;
 
 import java.sql.SQLException;
-import java.time.LocalTime;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
 
 import controller.AdminController;
+import controller.AdminControllerListener;
 import controller.DataBaseController;
+import controller.TutorController;
 import model.Course;
 import model.Student;
 import model.Tutor;
@@ -14,15 +17,22 @@ public class AdminView {
 	
 	Scanner in;
 	AdminController adminController;
+	TutorController tutorController;
 	DataBaseController db;
 	
-	public AdminView() throws SQLException {
+	public AdminView() {
 		in = new Scanner(System.in);
-		adminController = new AdminController();
-		db = new DataBaseController();
+		try {
+			adminController = new AdminController();
+			tutorController = new TutorController();
+			db = new DataBaseController();
+		} catch (SQLException e) {
+			System.out.println("Can't connect to database!");
+		}
+		
 	}
 	
-	public void adminLogin() throws SQLException {
+	public void adminLogin() {
 		System.out.println("\n-----------------------------------\n");
 		System.out.println("Hello admin!");
 		while (true) {
@@ -38,7 +48,7 @@ public class AdminView {
 		printMenu();
 	}
 
-	public void printMenu() throws SQLException {
+	public void printMenu() {
 		System.out.println("\n-----------------------------------\n");
 		System.out.println("1 - view course list");
 		System.out.println("2 - add course");
@@ -46,13 +56,14 @@ public class AdminView {
 		System.out.println("4 - add student");
 		System.out.println("5 - view tutor list");
 		System.out.println("6 - add tutor");
-		System.out.println("7 - sign out");
+		System.out.println("7 - assign tutor to course");
+		System.out.println("8 - sign out");
 		
 		int choice = 0;
 		while(true) {
 			System.out.println("\nEnter your choice: ");
 			choice = in.nextInt();
-			if (choice >= 1 && choice <= 7) {
+			if (choice >= 1 && choice <= 8) {
 				break;
 			} else {
 				System.out.println("Invalid choice!");
@@ -91,79 +102,177 @@ public class AdminView {
 			break;
 			
 		case 7:
+			assignTutor();
+			printMenu();
+			break;
+			
+		case 8:
 			System.out.println("\n-----------------------------------\n");
-			new MainMenu().printMainMenu();
+			try {
+				new MainMenu().printMainMenu();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 			break;
 			
 		}
 	}
 
-	public void printCourseList() throws SQLException {
+	public void printCourseList() {
 		System.out.println("\n----------------------------------------------------------------------------");
-		System.out.println("Course name \t\tDepartment \tSemester \tStart \t\tEnd");
+		System.out.printf("%-5s %-25s %-15s %-12s %-10s", "Id", "Course Name", "Department", "Semester", "Credits").println();
 		System.out.println("----------------------------------------------------------------------------");
-		adminController.printCourseList();		
+		
+		// This has been implemented as lambda function below 
+//		AdminControllerListener<Course> listener = new AdminControllerListener<Course>() {
+//			
+//			@Override
+//			public void print(List<Course> result) {
+//				
+//				for(Course course:result) {
+//					System.out.printf("%-5s %-25s %-15s %-12s %-10s", course.getCourseId(), course.getCourseName(), course.getDeptName(), course.getSemester(), course.getCredits()).println();
+//				}
+//				
+//			}
+//		};
+		
+		try {
+			adminController.printCourseList((List<Course> result) -> {
+				for(Course course:result) {
+					System.out.printf("%-5s %-25s %-15s %-12s %-10s", course.getCourseId(), course.getCourseName(), course.getDeptName(), course.getSemester(), course.getCredits()).println();
+				}
+			});
+		} catch (SQLException e) {
+//			e.printStackTrace();
+			System.err.println("Can't fetch course details!");
+		}
 	}
 
-	public void addCourse() throws SQLException {
+	public void addCourse() {
 		
-		String courseName = inputCourseName();		
-		int department = inputDepartment();
+		String courseName = inputCourseName();
+		int department;
+		try {
+			department = inputDepartment();			
+		} catch (SQLException e) {
+			System.err.println("Can't fetch department information!");
+			return;
+		}
 		int semester = inputSemester();
-		LocalTime startTime = inputStartTime();
-		LocalTime endTime = inputEndTime();
+		int credits = inputCredits();
 		
-		Course course = new Course(courseName);
+		Course course = new Course();
+		course.setCourseName(courseName);
 		course.setDepartment(department);
 		course.setSemester(semester);
-		course.setStartTime(startTime);
-		course.setEndTime(endTime);
+		course.setCredits(credits);
 		
-		adminController.addCourse(course);
-		
+		try {
+			int courseId = adminController.addCourse(course);		
+			addCourseSchedule(courseId);
+		} catch (SQLException e) {
+			System.err.println("Can't add course!");
+		}
+				
 	}
-	
-	private void printStudentList() throws SQLException {		
+		
+	private void printStudentList() {		
 		System.out.println("\n----------------------------------------------------------------------------");
-		System.out.println("Student name \tDepartment \tSemester \tCredits");
+		System.out.printf("%-25s %-15s %-12s %-10s", "Name", "Department", "Semester", "Credits").println();
 		System.out.println("----------------------------------------------------------------------------");
-		adminController.printStudentList();			
+		try {
+			adminController.printStudentList((List<Student> studentList) -> {
+				for (Student student:studentList) {
+					System.out.printf("%-25s %-15s %-12s %-10s", student.getName(), student.getDeptName(), student.getSemester(), student.getCredits()).println();
+				}					
+			});
+		} catch (SQLException e) {
+			System.err.println("Can't fetch students list!");
+		}
 	}
 	
-	public void addStudent() throws SQLException {
+	public void addStudent() {
 		String studentName = inputStudentName();
 		int semester = inputSemester();
-		int department = inputDepartment();
+		int department;
+		try {
+			department = inputDepartment();			
+		} catch (SQLException e) {
+			System.err.println("Can't fetch department information!");
+			return;
+		}
 		String email = inputEmail();
 		
-		Student student = new Student(studentName);
+		Student student = new Student();
+		student.setName(studentName);
 		student.setSemester(semester);
 		student.setDepartment(department);
 		student.setEmail(email);
 		
-		adminController.addStudent(student);
+		try {
+			adminController.addStudent(student);
+		} catch (SQLException e) {
+			System.err.println("Can't add student details!");
+		}
 	}
 	
-	private void printTutorList() throws SQLException {
+	private void printTutorList() {
 		System.out.println("\n----------------------------------------------------------------------------");
-		System.out.println("Tutor ID \tTutor name \tDepartment \tEmail");
+		System.out.printf("%-10s %-15s %-12s %-15s","Tutor ID", "Tutor Name", "Department", "Email").println();
 		System.out.println("----------------------------------------------------------------------------");
-		adminController.printTutorList();			
+		try {
+			adminController.printTutorList((List<Tutor> tutorList) -> {
+				for (Tutor tutor:tutorList) {
+					System.out.printf("%-10s %-15s %-12s %-15s", tutor.getId(),  tutor.getName(), tutor.getDeptName(), tutor.getEmail()).println();
+				}
+			});
+		} catch (SQLException e) {
+			System.err.println("Can't fetch tutor list!");
+		}
 	}
 	
-	private void addTutor() throws SQLException {
+	private void addTutor() {
 		String name = inputTutorName();
-		int department = inputDepartment();
+		int department;
+		try {
+			department = inputDepartment();			
+		} catch (SQLException e) {
+			System.err.println("Can't fetch department information!");
+			return;
+		}
 		String email = inputEmail();
 		
-		Tutor tutor = new Tutor(name);
+		Tutor tutor = new Tutor();
+		tutor.setName(name);
 		tutor.setEmail(email);
 		tutor.setDepartment(department);
 		
-		adminController.addTutor(tutor);
+		try {
+			adminController.addTutor(tutor);
+		} catch (SQLException e) {
+			System.err.println("Can't add tutor details!");
+		}
 	}
 	
-	
+	private void assignTutor() {
+		System.out.println("\nChoose tutor:");	
+		printTutorList();
+		System.out.print("\nEnter tutor id: ");
+		int tutorId = in.nextInt();
+		System.out.println("\nChoose course:");
+		printCourseList();
+		System.out.print("\nEnter course id: ");
+		int courseId = in.nextInt();
+		
+		try {
+			if(tutorController.addCourse(tutorId, courseId)) {
+				System.out.println("Tutor assigned successfully!");
+			}
+		} catch (SQLException e) {
+			System.err.println("Can't assign tutor!");
+		}
+		
+	}
 
 	private String inputEmail() {
 		String email;
@@ -223,20 +332,79 @@ public class AdminView {
 		return semester;
 	}
 	
-	private LocalTime inputStartTime() {
-		LocalTime startTime;
-		System.out.print("Enter start time: ");
-		String time = in.next();
-		startTime = LocalTime.of( Integer.valueOf(time.split(":")[0]) , Integer.valueOf(time.split(":")[1]) );
-		return startTime;
+	private int inputCredits() {
+		int credits = 0;
+		while (true) {
+			System.out.print("\nEnter credits (1-10): ");
+			credits = in.nextInt();
+			if (credits >= 1 && credits <= 10) {
+				break;
+			} else {
+				System.out.println("Invalid credits!");
+			}
+		}
+		return credits;
 	}
+
+	private void addCourseSchedule(int courseId) {
+		
+		System.out.println("\nAdd schedule of the created course:\n");
+		printSlotInfo();
+		System.out.println("Enter slot for each day of week (0 for no slot):");
+		
+		int[] slots = new int[5];
+		HashMap<Integer, String> days = new HashMap<>();
+		days.put(0, "monday");
+		days.put(1, "tuesday");
+		days.put(2, "wednesday");
+		days.put(3, "thursday");
+		days.put(4, "friday");
+		
+		for (int i=0; i<slots.length; i++) {
+			while (true) {
+				System.out.print(days.get(i) + " :");
+				slots[i] = in.nextInt();
+				if (slots[i] >= 0 && slots[i] <= 5) {
+					break;
+				} else {
+					System.out.println("Invalid slot!");
+				}
+			}
+		}
+		
+		try {
+			adminController.addSchedule(courseId, slots);
+			System.out.println("\nSchedule added successfully!");
+		} catch (SQLException e) {
+			System.err.println("Can't add schedule!");
+		}
+		
+		
+	}
+
+	private void printSlotInfo() {
+		System.out.println("1 -> 9:00 - 10:00");		
+		System.out.println("2 -> 10:00 - 11:00");		
+		System.out.println("3 -> 11:30 - 12:30");		
+		System.out.println("4 -> 14:00 - 15:00");		
+		System.out.println("5 -> 15:00 - 16:00");		
+	}
+
 	
-	private LocalTime inputEndTime() {
-		LocalTime endTime;
-		System.out.print("Enter end time: ");
-		String time = in.next();
-		endTime = LocalTime.of( Integer.valueOf(time.split(":")[0]) , Integer.valueOf(time.split(":")[1]) );
-		return endTime;
-	}
+//	private LocalTime inputStartTime() {
+//		LocalTime startTime;
+//		System.out.print("Enter start time: ");
+//		String time = in.next();
+//		startTime = LocalTime.of( Integer.valueOf(time.split(":")[0]) , Integer.valueOf(time.split(":")[1]) );
+//		return startTime;
+//	}
+//	
+//	private LocalTime inputEndTime() {
+//		LocalTime endTime;
+//		System.out.print("Enter end time: ");
+//		String time = in.next();
+//		endTime = LocalTime.of( Integer.valueOf(time.split(":")[0]) , Integer.valueOf(time.split(":")[1]) );
+//		return endTime;
+//	}
 	
 }

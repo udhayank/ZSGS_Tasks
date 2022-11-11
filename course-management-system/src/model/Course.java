@@ -1,18 +1,18 @@
 package model;
 
-import java.time.LocalTime;
 
 public class Course {
 	
 	private int courseId;
 	private String courseName;
 	private int department;
+	private String deptName;
 	private int semester;
-	private LocalTime startTime;
-	private LocalTime endTime;
+	private int credits;
 	
-	public Course(String name) {
-		this.courseName = name;
+	
+	public Course() {
+		
 	}
 
 	// getters and setters
@@ -40,17 +40,19 @@ public class Course {
 	public void setSemester(int semester) {
 		this.semester = semester;
 	}	
-	public LocalTime getStartTime() {
-		return startTime;
+	public int getCredits() {
+		return credits;
 	}
-	public void setStartTime(LocalTime startTime) {
-		this.startTime = startTime;
+	public void setCredits(int credits) {
+		this.credits = credits;
 	}
-	public LocalTime getEndTime() {
-		return endTime;
+
+	public String getDeptName() {
+		return deptName;
 	}
-	public void setEndTime(LocalTime endTime) {
-		this.endTime = endTime;
+
+	public void setDeptName(String deptName) {
+		this.deptName = deptName;
 	}
 	
 }

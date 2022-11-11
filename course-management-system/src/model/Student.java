@@ -8,12 +8,17 @@ public class Student {
 	private String name;
 	private int semester;
 	private int department;
+	private String deptName;
 	private String email;
 	private int credits;
 	private List<Course> currentCourseList;
 	private List<Course> completedCourseList;
 	
-	public Student(String name) {
+	public Student() {
+		
+	}
+	
+	public Student(int rollNo,String name) {
 		this.name = name;
 	}
 	
@@ -70,6 +75,14 @@ public class Student {
 	}
 	public void addCompletedCourseList(Course completedCourse) {
 		this.completedCourseList.add(completedCourse);
+	}
+
+	public String getDeptName() {
+		return deptName;
+	}
+
+	public void setDeptName(String deptName) {
+		this.deptName = deptName;
 	}
 	
 	

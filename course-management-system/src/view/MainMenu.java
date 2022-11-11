@@ -40,21 +40,43 @@ public class MainMenu {
 			break;
 			
 		case 3:
-			
+			TutorView tutorView = new TutorView();
+			tutorView.tutorLogin();
 			break;
 			
-				}
+		}
 		
 	}
 	
-	public void init() throws SQLException {
+	public void init() {
 		System.out.println("-----------------------------------");
 		System.out.println("Welcome to Course Management System");
 		System.out.println("-----------------------------------\n");
-		printMainMenu();
+		
+		printFeatures();
+		
+		try {
+			printMainMenu();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
-	public static void main(String[] args) throws SQLException {
+	private void printFeatures() {
+		
+		System.out.println("Features:");
+		System.out.println("\t--> Store and manage information about courses offered, students and tutors.");
+		System.out.println("\t--> Manage mapping of course with students and tutor.");
+		System.out.println("\t--> Admin can add new course, new student, new tutor");
+		System.out.println("\t--> Admin can add assign tutor to cource");
+		System.out.println("\t--> Students can enroll in the interested courses and a schedule is generated");
+		System.out.println("\t--> Tutor can view student list and class schedule");
+		System.out.println("\t--> Any clash in the schedule is handled and not allowed");
+		System.out.println("\n-----------------------------------\n");
+		
+	}
+
+	public static void main(String[] args) {
 		
 		MainMenu menu = new MainMenu();
 		menu.init();
